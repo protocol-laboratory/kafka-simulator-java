@@ -1,0 +1,33 @@
+name: Release Windows Latest
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: write-all
+
+jobs:
+  push_to_registries:
+    name: Push Docker image to multiple registries
+    runs-on: windows-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Set up jdk 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: package msi
+        run: gradle packageMsi -x checkstyleMain -x checkstyleTest
+      - name: rename msi
+        run: Move-Item build/compose/binaries/main/msi/kafka-simulator-1.0.0.msi kafka-simulator.msi
+      - name: Release
+        uses: shoothzj/latest-release-action@v1
+        with:
+          tag_name: latest_windows_msi
+          release_name: latest_windows_msi
+          files: kafka-simulator.msi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
